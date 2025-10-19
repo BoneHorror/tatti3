@@ -413,9 +413,16 @@ namespace Tatti3
                 }
                 else
                 {
-                    var jsonEntries = selectedItems.Cast<object>()
-                        .Select(item => dat.SerializeEntryToJson((uint)entryList.Items.IndexOf(item)));
-                    var text = $"[{string.Join(",", jsonEntries)}]";
+                    var entriesWithIndices = selectedItems.Cast<object>()
+                        .Select(item => {
+                            var index = (uint)entryList.Items.IndexOf(item);
+                            var entryJson = dat.SerializeEntryToJson(index);
+                            // Can't just inject the index into the JSON string (even thought I figured that'd be easiest, oops)
+                            // Instead, we'll create a structure that can be serialized cleanly.
+                            return new { index, data = System.Text.Json.JsonSerializer.Deserialize<object>(entryJson) };
+                        })
+                        .OrderBy(entry => entry.index);
+                    var text = System.Text.Json.JsonSerializer.Serialize(entriesWithIndices, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
                     SetClipboardText(text);
                 }
             }
@@ -428,18 +435,19 @@ namespace Tatti3
         void SetClipboardText(string text) {
             // Clipboard touching fails if other program is using it; try a few times and then
             // give up.
+            var data = new DataObject(DataFormats.UnicodeText, text);
             Exception? ex = null;
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 20; i++)
             {
                 try
                 {
-                    Clipboard.SetText(text);
+                    Clipboard.SetDataObject(data, true);
                     return;
                 }
                 catch (Exception e)
                 {
                     ex = e;
-                    System.Threading.Thread.Sleep(5);
+                    System.Threading.Thread.Sleep(10);
                 }
             }
             if (ex != null)
@@ -452,16 +460,16 @@ namespace Tatti3
             // Clipboard touching fails if other program is using it; try a few times and then
             // give up.
             Exception? ex = null;
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 20; i++)
             {
                 try
                 {
                     return Clipboard.GetText();
                 }
-                catch (Exception e)
+                catch (System.Runtime.InteropServices.COMException e)
                 {
                     ex = e;
-                    System.Threading.Thread.Sleep(5);
+                    System.Threading.Thread.Sleep(10);
                 }
             }
             if (ex != null)
@@ -503,6 +511,11 @@ namespace Tatti3
             var dat = state.GetDat(state.CurrentDat);
             if (dat == null)
             {
+                return;
+            }
+            if (!Clipboard.ContainsText())
+            {
+                e.CanExecute = false;
                 return;
             }
             var text = Clipboard.GetText();
