@@ -56,7 +56,7 @@
                 <TextBlock Text="ID Jump" DockPanel.Dock="Right" Margin="2,0,2,0" />
                 <TextBox x:Name="searchBox" KeyDown="OnSearchBoxKey" />
             </DockPanel>
-            <ListBox x:Name="entryList" DockPanel.Dock="Top">
+            <ListBox x:Name="entryList" DockPanel.Dock="Top" SelectionMode="Extended">
                 <ListBox.ItemsSource>
                     <Binding Path="CurrentEntryNames" />
                 </ListBox.ItemsSource>

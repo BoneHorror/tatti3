@@ -394,14 +394,30 @@ namespace Tatti3
         {
             try
             {
-                var sourceEntry = (uint)entryList.SelectedIndex;
                 var dat = state.GetDat(state.CurrentDat);
                 if (dat == null)
                 {
                     return;
                 }
-                var text = dat.SerializeEntryToJson(sourceEntry);
-                SetClipboardText(text);
+                var selectedItems = entryList.SelectedItems;
+                if (selectedItems.Count == 0)
+                {
+                    return;
+                }
+
+                if (selectedItems.Count == 1)
+                {
+                    var sourceEntry = (uint)entryList.SelectedIndex;
+                    var text = dat.SerializeEntryToJson(sourceEntry);
+                    SetClipboardText(text);
+                }
+                else
+                {
+                    var jsonEntries = selectedItems.Cast<object>()
+                        .Select(item => dat.SerializeEntryToJson((uint)entryList.Items.IndexOf(item)));
+                    var text = $"[{string.Join(",", jsonEntries)}]";
+                    SetClipboardText(text);
+                }
             }
             catch (Exception ex)
             {
