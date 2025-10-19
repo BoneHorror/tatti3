@@ -466,7 +466,7 @@ namespace Tatti3
                 {
                     return Clipboard.GetText();
                 }
-                catch (System.Runtime.InteropServices.COMException e)
+                catch (Exception e)
                 {
                     ex = e;
                     System.Threading.Thread.Sleep(10);
@@ -511,11 +511,6 @@ namespace Tatti3
             var dat = state.GetDat(state.CurrentDat);
             if (dat == null)
             {
-                return;
-            }
-            if (!Clipboard.ContainsText())
-            {
-                e.CanExecute = false;
                 return;
             }
             var text = Clipboard.GetText();
